@@ -27,6 +27,7 @@ const NAV_ITEMS: NavItem[] = [
         href: "/trade-history",
         description: "Full trade export & analytics",
         icon: <History size={14} />,
+        comingSoon: true,
       },
       {
         label: "Journal",
@@ -226,7 +227,7 @@ const SHEET_PAGES: SheetPage[] = [
   { label: "Tracker", href: "/tracker", icon: Search },
   { label: "Portfolio", href: "/portfolio", icon: Wallet },
   { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
-  { label: "Trade History", href: "/trade-history", icon: History },
+  { label: "Trade History", href: "/trade-history", icon: History, comingSoon: true },
   { label: "Journal", href: "#", icon: BookOpen, comingSoon: true },
   { label: "Demo Trading", href: "#", icon: PlayCircle, comingSoon: true },
   { label: "Accrued Funding", href: "#", icon: Coins, comingSoon: true },
@@ -389,14 +390,14 @@ export function Navbar() {
       )}
 
       {/* ── More sheet (slides up) ── */}
+      {moreOpen && (
       <div
         className="md:hidden fixed left-0 right-0 z-[70] rounded-t-2xl overflow-hidden"
         style={{
           bottom: 60,
           background: "var(--bg-surface)",
           borderTop: "1px solid var(--border)",
-          transform: moreOpen ? "translateY(0)" : "translateY(110%)",
-          transition: "transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)",
+          animation: "sheetSlideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1)",
           maxHeight: "80vh",
           overflowY: "auto",
         }}
@@ -479,6 +480,7 @@ export function Navbar() {
           })}
         </div>
       </div>
+      )}
     </>
   );
 }

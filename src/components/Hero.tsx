@@ -274,7 +274,7 @@ export function Hero() {
                 />
                 <button
                   type="submit"
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 mr-1.5 text-sm font-semibold transition-opacity hover:opacity-90 shrink-0"
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 mr-1.5 text-xs sm:text-sm font-semibold transition-opacity hover:opacity-90 shrink-0"
                   style={{ background: "var(--accent)", color: "var(--accent-fg)", borderRadius: "var(--r-sm)" }}
                 >
                   Search <ArrowRight size={13} />

@@ -112,7 +112,7 @@ function PodiumCard({
 
   return (
     <div
-      className={`podium-card relative flex flex-col ${isChamp ? "champ-glow" : ""}`}
+      className={`podium-card relative flex flex-col p-3 sm:p-4 ${isChamp ? "champ-glow sm:min-h-[210px]" : "sm:min-h-[170px]"}`}
       style={{
         background: isChamp ? "var(--accent-dim)" : "var(--bg-surface)",
         border: `1px solid ${isChamp ? "var(--accent)" : "var(--border)"}`,
@@ -201,13 +201,13 @@ function Podium({
   // visual order: 2 · 1 · 3
   return (
     <div className="grid grid-cols-3 gap-1.5 sm:gap-3 mb-6 sm:mb-8 items-end">
-      <div className="order-2 sm:order-1">
+      <div className="order-2 sm:order-1 sm:pb-6">
         <PodiumCard item={second} sortBy={sortBy} windowShort={windowShort} copyState={copyState} delay={90} />
       </div>
       <div className="order-1 sm:order-2">
         <PodiumCard item={first} sortBy={sortBy} windowShort={windowShort} copyState={copyState} delay={0} />
       </div>
-      <div className="order-3">
+      <div className="order-3 sm:pb-4">
         <PodiumCard item={third} sortBy={sortBy} windowShort={windowShort} copyState={copyState} delay={180} />
       </div>
     </div>
@@ -278,6 +278,7 @@ function LedgerRow({
       className="lb-row lb-grid grid items-center px-4 group"
       style={{
         gap: 16,
+        height: 52,
         borderBottom: "1px solid var(--border-subtle)",
         animationDelay: `${Math.min(i * 26, 560)}ms`,
         transition: "background 0.15s",

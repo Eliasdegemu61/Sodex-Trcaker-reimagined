@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { CornerMarks } from "@/components/CornerMarks";
 import { CountUp } from "@/components/CountUp";
 import { TokenIcon } from "@/components/TokenIcon";
+import { tickerLabel } from "@/lib/tokenIcons";
 import { FundFlowCard } from "@/components/FundFlowCard";
 import {
   Search,
@@ -26,6 +27,7 @@ import {
   Bookmark,
   Link2,
   Unlink,
+  Lock,
 } from "lucide-react";
 
 /* ════════════════════════════════════════════════════════════════
@@ -1003,7 +1005,7 @@ function PnlCalendar({ chart, windowShort }: { chart: ChartPoint[]; windowShort:
                   {/* PNL value bottom */}
                   {hasData && cell.current && (
                     <span
-                      className="mono text-[9px] font-bold tabular-nums leading-none mt-auto px-1 pb-1 text-right heat-cell-value"
+                      className="mono text-[10px] font-bold tabular-nums leading-none mt-auto px-1 pb-1 text-right heat-cell-value"
                       style={{
                         color: isPositive ? "var(--cal-green)" : isNegative ? "var(--cal-red)" : "var(--text-muted)",
                       }}
@@ -1089,7 +1091,8 @@ function RecentTradesTable({ trades }: { trades: MergedTrade[] }) {
     <div className="relative" style={{ border: "1px solid var(--border)", background: "var(--bg-surface)" }}>
       <CornerMarks size={8} inset={-1} thickness={1} opacity={0.5} />
 
-      <div className="overflow-x-auto">
+      {/* Desktop: table */}
+      <div className="hidden sm:block overflow-x-auto">
         <div style={{ minWidth: 600 }}>
           {/* Header */}
           <div
@@ -1168,9 +1171,49 @@ function RecentTradesTable({ trades }: { trades: MergedTrade[] }) {
         </div>
       </div>
 
+      {/* Mobile: compact cards */}
+      <div className="sm:hidden flex flex-col gap-2 p-3">
+        {pageTrades.map((t) => {
+          const isBuy = t.side === "buy";
+          return (
+            <div
+              key={t.id}
+              className="flex items-center gap-2.5 px-3 py-2"
+              style={{ border: "1px solid var(--border-subtle)", borderRadius: 4, background: "var(--bg)" }}
+            >
+              <TokenIcon symbol={t.market} size={20} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="mono text-xs font-bold" style={{ color: "var(--text)" }}>{t.market}</span>
+                  <span className="mono text-xs font-bold tabular-nums" style={{ color: "var(--text)" }}>
+                    {fmt(t.value)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span
+                    className="mono text-[10px] font-bold"
+                    style={{ color: isBuy ? "var(--green)" : "var(--red)" }}
+                  >
+                    {isBuy ? "BUY" : "SELL"}
+                  </span>
+                  <span style={{ width: 2, height: 2, borderRadius: "50%", background: "var(--text-faint)" }} />
+                  <span className="mono text-[10px]" style={{ color: t.type === "perps" ? "var(--accent)" : "var(--text-muted)" }}>
+                    {t.type.toUpperCase()}
+                  </span>
+                  <span style={{ width: 2, height: 2, borderRadius: "50%", background: "var(--text-faint)" }} />
+                  <span className="mono text-[10px]" style={{ color: "var(--text-faint)" }}>
+                    {t.size} @ ${t.price.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {/* Footer with pagination */}
       <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-        <span className="tag" style={{ color: "var(--text-faint)" }}>
+        <span className="tag text-[9px] sm:text-xs" style={{ color: "var(--text-faint)" }}>
           {trades.length > 0 ? `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, trades.length)} of ${trades.length}` : "NO TRADES"}
         </span>
         {totalPages > 1 && (
@@ -1178,18 +1221,18 @@ function RecentTradesTable({ trades }: { trades: MergedTrade[] }) {
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="flex items-center justify-center w-7 h-7 transition-colors disabled:opacity-30"
+              className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 transition-colors disabled:opacity-30"
               style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
             >
               <ChevronLeft size={14} />
             </button>
-            <span className="tag px-2" style={{ color: "var(--text-faint)" }}>
+            <span className="tag px-2 text-[9px] sm:text-xs" style={{ color: "var(--text-faint)" }}>
               {page + 1}/{totalPages}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page === totalPages - 1}
-              className="flex items-center justify-center w-7 h-7 transition-colors disabled:opacity-30"
+              className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 transition-colors disabled:opacity-30"
               style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
             >
               <ChevronRight size={14} />
@@ -1438,7 +1481,8 @@ function PositionHistoryTable({ positions, perpsMap }: { positions: PositionHist
     <div className="relative" style={{ border: "1px solid var(--border)", background: "var(--bg-surface)" }}>
       <CornerMarks size={8} inset={-1} thickness={1} opacity={0.5} />
 
-      <div className="overflow-x-auto">
+      {/* Desktop: table */}
+      <div className="hidden sm:block overflow-x-auto">
         <div style={{ minWidth: 600 }}>
           {/* Header */}
           <div
@@ -1521,9 +1565,54 @@ function PositionHistoryTable({ positions, perpsMap }: { positions: PositionHist
         </div>
       </div>
 
+      {/* Mobile: compact cards */}
+      <div className="sm:hidden flex flex-col gap-2 p-3">
+        {pagePositions.map((p) => {
+          const name = perpsMap.get(p.symbol_id) || `Sym-${p.symbol_id}`;
+          const realizedPnl = parseFloat(p.realized_pnl);
+          const positive = realizedPnl >= 0;
+          const size = parseFloat(p.size);
+          const entry = parseFloat(p.avg_entry_price);
+          const exit = parseFloat(p.avg_close_price);
+          return (
+            <div
+              key={p.position_id}
+              className="flex items-center gap-2.5 px-3 py-2"
+              style={{ border: "1px solid var(--border-subtle)", borderRadius: 4, background: "var(--bg)" }}
+            >
+              <TokenIcon symbol={name} size={20} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="mono text-xs font-bold" style={{ color: "var(--text)" }}>{name}</span>
+                  <span
+                    className="mono text-xs font-bold tabular-nums"
+                    style={{ color: positive ? "var(--green)" : "var(--red)" }}
+                  >
+                    {positive ? "+" : ""}{fmt(realizedPnl)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="mono text-[10px] font-bold" style={{ color: p.position_side === 1 ? "var(--green)" : "var(--red)" }}>
+                    {sideLabel(p.position_side)}
+                  </span>
+                  <span style={{ width: 2, height: 2, borderRadius: "50%", background: "var(--text-faint)" }} />
+                  <span className="mono text-[10px]" style={{ color: "var(--text-muted)" }}>
+                    {marginModeLabel(p.margin_mode)}
+                  </span>
+                  <span style={{ width: 2, height: 2, borderRadius: "50%", background: "var(--text-faint)" }} />
+                  <span className="mono text-[10px]" style={{ color: "var(--text-faint)" }}>
+                    {size} @ {entry > 0 ? `$${entry.toLocaleString()}` : "—"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {/* Footer with pagination */}
       <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-        <span className="tag" style={{ color: "var(--text-faint)" }}>
+        <span className="tag text-[9px] sm:text-xs" style={{ color: "var(--text-faint)" }}>
           {positions.length > 0 ? `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, positions.length)} of ${positions.length}` : "NO POSITIONS"}
         </span>
         {totalPages > 1 && (
@@ -1531,18 +1620,18 @@ function PositionHistoryTable({ positions, perpsMap }: { positions: PositionHist
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="flex items-center justify-center w-7 h-7 transition-colors disabled:opacity-30"
+              className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 transition-colors disabled:opacity-30"
               style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
             >
               <ChevronLeft size={14} />
             </button>
-            <span className="tag px-2" style={{ color: "var(--text-faint)" }}>
+            <span className="tag px-2 text-[9px] sm:text-xs" style={{ color: "var(--text-faint)" }}>
               {page + 1}/{totalPages}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page === totalPages - 1}
-              className="flex items-center justify-center w-7 h-7 transition-colors disabled:opacity-30"
+              className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 transition-colors disabled:opacity-30"
               style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
             >
               <ChevronRight size={14} />
@@ -1636,7 +1725,7 @@ function SpotHoldingsCard({
       <CornerMarks size={8} inset={-1} thickness={1} opacity={0.5} />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+      <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 sm:py-3" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
         <div className="flex items-center gap-2">
           <Wallet size={14} style={{ color: "var(--accent)" }} />
           <span className="tag" style={{ color: "var(--accent)" }}>SPOT HOLDINGS</span>
@@ -1655,7 +1744,8 @@ function SpotHoldingsCard({
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto">
+          {/* Desktop: table */}
+          <div className="hidden sm:block overflow-x-auto">
             <div style={{ minWidth: 560 }}>
               {/* Header */}
               <div
@@ -1687,7 +1777,7 @@ function SpotHoldingsCard({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <TokenIcon symbol={r.coin} size={20} />
-                    <span className="mono text-xs font-bold truncate" style={{ color: "var(--text)" }}>{r.coin}</span>
+                    <span className="mono text-xs font-bold truncate" style={{ color: "var(--text)" }}>{tickerLabel(r.coin)}</span>
                   </div>
                   <span className="mono text-xs text-right tabular-nums" style={{ color: "var(--text)" }}>
                     {r.amount.toLocaleString("en-US", { maximumFractionDigits: 6 })}
@@ -1706,28 +1796,58 @@ function SpotHoldingsCard({
             </div>
           </div>
 
+          {/* Mobile: compact cards */}
+          <div className="sm:hidden flex flex-col gap-2 p-3">
+            {pageRows.map((r) => (
+              <div
+                key={r.coin}
+                className="flex items-center gap-2.5 px-3 py-2"
+                style={{ border: "1px solid var(--border-subtle)", borderRadius: 4, background: "var(--bg)" }}
+              >
+                <TokenIcon symbol={r.coin} size={20} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="mono text-xs font-bold" style={{ color: "var(--text)" }}>{tickerLabel(r.coin)}</span>
+                    <span className="mono text-xs font-bold tabular-nums" style={{ color: "var(--text)" }}>
+                      {r.usdValue > 0 ? fmt(r.usdValue) : "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="mono text-[10px]" style={{ color: "var(--text-faint)" }}>
+                      {r.amount.toLocaleString("en-US", { maximumFractionDigits: 4 })}
+                      {r.locked > 0 && <span className="inline-flex items-center gap-0.5" style={{ color: "var(--text-muted)" }}>&nbsp;·&nbsp;{r.locked.toLocaleString("en-US", { maximumFractionDigits: 4 })} <Lock size={8} /></span>}
+                    </span>
+                    <span className="mono text-[10px]" style={{ color: "var(--text-muted)" }}>
+                      {isStablecoin(r.coin) ? "$1.00" : r.price > 0 ? `$${r.price.toLocaleString("en-US", { maximumFractionDigits: 4 })}` : pricesLoading ? "…" : "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-2.5" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-              <span className="tag" style={{ color: "var(--text-faint)" }}>
+              <span className="tag text-[9px] sm:text-xs" style={{ color: "var(--text-faint)" }}>
                 {page * pageSize + 1}–{Math.min((page + 1) * pageSize, rows.length)} of {rows.length}
               </span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   disabled={page === 0}
-                  className="flex items-center justify-center w-7 h-7 transition-colors disabled:opacity-30"
+                  className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 transition-colors disabled:opacity-30"
                   style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
                 >
                   <ChevronLeft size={14} />
                 </button>
-                <span className="tag px-2" style={{ color: "var(--text-faint)" }}>
+                <span className="tag px-2 text-[9px] sm:text-xs" style={{ color: "var(--text-faint)" }}>
                   {page + 1}/{totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                   disabled={page === totalPages - 1}
-                  className="flex items-center justify-center w-7 h-7 transition-colors disabled:opacity-30"
+                  className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 transition-colors disabled:opacity-30"
                   style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
                 >
                   <ChevronRight size={14} />
@@ -1775,14 +1895,14 @@ function ActivityTabs({
   ];
   return (
     <div>
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-1.5 sm:gap-2 mb-3">
         {TABS.map((t) => {
           const active = tab === t.id;
           return (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className="tag flex items-center gap-1.5 px-3 py-1.5 transition-colors"
+              className="tag flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-[9px] sm:text-xs transition-colors"
               style={{
                 background: active ? "var(--accent)" : "transparent",
                 color: active ? "var(--accent-fg)" : "var(--text-muted)",
@@ -1931,24 +2051,6 @@ function PortfolioHeader({
             <RefreshCw size={11} className={refreshing ? "animate-spin" : ""} />
             REFRESH
           </button>
-          <a
-            href={`https://explorer.sodex.dev/address/${data.wallet_address}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 tag transition-colors"
-            style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)";
-              (e.currentTarget as HTMLElement).style.color = "var(--accent)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
-              (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
-            }}
-          >
-            <ExternalLink size={11} />
-            EXPLORER
-          </a>
         </div>
       </div>
     </div>
@@ -2053,24 +2155,6 @@ function ProfileHeader({
             <RefreshCw size={11} className={refreshing ? "animate-spin" : ""} />
             REFRESH
           </button>
-          <a
-            href={`https://explorer.sodex.dev/address/${data.wallet_address}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 tag transition-colors"
-            style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)";
-              (e.currentTarget as HTMLElement).style.color = "var(--accent)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
-              (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
-            }}
-          >
-            <ExternalLink size={11} />
-            EXPLORER
-          </a>
           <button
             onClick={onReset}
             className="flex items-center justify-center w-8 h-8 transition-colors"

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Eye } from "lucide-react";
+import Link from "next/link";
 import { TraderModal } from "@/components/TraderModal";
 import { RowActionButton } from "@/components/RowActionButton";
 import { useLandingData } from "@/components/LandingDataProvider";
@@ -300,14 +301,15 @@ export function TopTraders() {
         </div>
 
         <div className="mt-4 flex justify-end">
-          <button
+          <Link
+            href="/leaderboard"
             className="text-xs mono transition-colors"
             style={{ color: "var(--text-faint)" }}
             onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--accent)")}
             onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-faint)")}
           >
             View full leaderboard →
-          </button>
+          </Link>
         </div>
       </div>
 

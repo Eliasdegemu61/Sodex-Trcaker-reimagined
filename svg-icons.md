@@ -71,7 +71,8 @@ meme.ssi= https://static.sosovalue.com/sosovalue/2024/12/21/3bcf3053-3c44-4ea9-a
 defi.ssi= https://static.sosovalue.com/sosovalue/2024/12/21/8acfd44e-e0e7-43c8-b980-301f665df279.svg
 ussi= https://sosovalue.com/img/ssi/ussi.svg
 ton= https://static.sosovalue.com/sosovalue/2025/08/07/52717eae-5e17-4eaf-bab8-7b632ff7f9c3.jpg
-
+usdc= https://static.sosovalue.com/sosponge/droplist/23/06/13/x5ywt0j0fwz6.png
+usdt= https://static.sosovalue.com/2026/03/05/66f58297-81ec-4b70-b443-8a75c5470410.png
 # Naming notes (SoDEX → icon key):
 #  - WSOSO / SOSO-USD / SOSO/USDC  → soso
 #  - Index products carry a ".ssi" base (vMAG7.ssi) or "ssi" displayName (MAG7ssi): mag7.ssi / meme.ssi / defi.ssi

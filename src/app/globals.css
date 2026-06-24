@@ -3,9 +3,12 @@
 /* ── Mobile layout ── */
 @media (max-width: 767px) {
   main { padding-bottom: 5rem; }
+}
 
+/* ── Mobile layout overrides (below sm breakpoint) ── */
+@media (max-width: 639px) {
   /* Podium cards — compact on mobile */
-  .podium-card { padding: 10px 10px !important; margin-top: 0 !important; }
+  .podium-card { padding: 10px 10px !important; margin-top: 0 !important; min-height: auto !important; }
 
   /* Ledger — stacked vertical rows on mobile */
   .lb-grid { grid-template-columns: 28px 1fr !important; gap: 8px !important; height: auto !important; padding: 10px 12px !important; }
@@ -43,8 +46,9 @@
   /* Volume chart — shorter on mobile */
   .volume-chart-svg { aspect-ratio: 1000 / 320 !important; }
 
-  /* Calendar — compact cells on mobile, hide PNL text show only dot */
-  .heat-cell .heat-cell-value { display: none !important; }
+  /* Calendar — compact cells on mobile, PnL text visible */
+  .heat-cell { aspect-ratio: auto !important; min-height: 44px; }
+  .heat-cell .heat-cell-value { font-size: 9px !important; }
 
   /* Calendar left panel — bottom border on mobile, right border on desktop */
   .cal-left-panel { border-bottom: 1px solid var(--border-subtle); border-right: none; }
@@ -54,6 +58,11 @@
   .cal-left-panel { border-right: 1px solid var(--border-subtle); border-bottom: none; width: 300px; }
   .lb-grid { grid-template-columns: 52px minmax(150px,1fr) 110px 110px; }
   .lb-grid-container { min-width: 700px; }
+}
+
+@keyframes sheetSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
 
 /* ════════════════════════════════════════════════════════════════

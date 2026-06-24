@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
-import { TradeHistoryPage } from "@/components/TradeHistoryPage";
+import { ComingSoon } from "@/components/ComingSoon";
 
 export const metadata: Metadata = {
   title: "Trade History — SoDEX Tracker",
@@ -11,7 +11,11 @@ export default function TradeHistory() {
   return (
     <main>
       <Navbar />
-      <TradeHistoryPage />
+      <ComingSoon
+        label="TRADE HISTORY"
+        title="Trade History"
+        description="Full per-position trade export with entry, exit, PnL, leverage, and fees is coming soon."
+      />
     </main>
   );
 }

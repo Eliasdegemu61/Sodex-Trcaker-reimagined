@@ -145,7 +145,7 @@ export function FundFlowCard({ walletAddress }: { walletAddress: string }) {
       <CornerMarks size={8} inset={-1} thickness={1} opacity={0.5} />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+      <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 sm:py-3" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
         <div className="flex items-center gap-2">
           <ArrowDown size={14} style={{ color: "var(--accent)" }} />
           <span className="tag" style={{ color: "var(--accent)" }}>FUND FLOW</span>
@@ -163,11 +163,11 @@ export function FundFlowCard({ walletAddress }: { walletAddress: string }) {
           ].map((s, i) => (
             <div
               key={s.label}
-              className="px-4 py-3 flex flex-col gap-1"
+              className="px-2.5 sm:px-4 py-2 sm:py-3 flex flex-col gap-0.5"
               style={{ borderLeft: i > 0 ? "1px solid var(--border-subtle)" : "none" }}
             >
-              <span className="tag" style={{ color: "var(--text-faint)" }}>{s.label}</span>
-              <span className="mono text-sm font-bold tabular-nums" style={{ color: s.tone }}>
+              <span className="tag text-[8px] sm:text-xs" style={{ color: "var(--text-faint)" }}>{s.label}</span>
+              <span className="mono text-xs sm:text-sm font-bold tabular-nums" style={{ color: s.tone }}>
                 {s.label === "NET" && s.value >= 0 ? "+" : ""}{fmtUsd(s.value)}
               </span>
             </div>
@@ -177,7 +177,7 @@ export function FundFlowCard({ walletAddress }: { walletAddress: string }) {
 
       {/* Filter buttons */}
       {!loading && !error && flows.length > 0 && (
-        <div className="flex items-center gap-2 px-5 py-2.5" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+        <div className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
           {[
             { id: "all", label: "ALL" },
             { id: "deposit", label: "DEPOSITS" },
@@ -186,7 +186,7 @@ export function FundFlowCard({ walletAddress }: { walletAddress: string }) {
             <button
               key={t.id}
               onClick={() => setFilter(t.id as typeof filter)}
-              className="tag px-2.5 py-1 transition-colors"
+              className="tag px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-xs transition-colors"
               style={{
                 background: filter === t.id ? "var(--accent)" : "transparent",
                 color: filter === t.id ? "var(--accent-fg)" : "var(--text-muted)",
@@ -201,7 +201,7 @@ export function FundFlowCard({ walletAddress }: { walletAddress: string }) {
       )}
 
       {/* Content */}
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="flex items-end gap-1.5" style={{ height: 60 }}>
@@ -232,7 +232,9 @@ export function FundFlowCard({ walletAddress }: { walletAddress: string }) {
             </span>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Desktop: table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border-subtle)" }}>
@@ -262,10 +264,7 @@ export function FundFlowCard({ walletAddress }: { walletAddress: string }) {
                           ) : (
                             <ArrowUp size={12} style={{ color: "var(--color-down)" }} />
                           )}
-                          <span
-                            className="tag"
-                            style={{ color: deposit ? "var(--color-up)" : "var(--color-down)" }}
-                          >
+                          <span className="tag" style={{ color: deposit ? "var(--color-up)" : "var(--color-down)" }}>
                             {deposit ? "DEPOSIT" : "WITHDRAW"}
                           </span>
                         </div>
@@ -273,10 +272,7 @@ export function FundFlowCard({ walletAddress }: { walletAddress: string }) {
                       <td className="py-2.5 px-2">
                         <span className="mono text-xs font-bold" style={{ color: "var(--text)" }}>{flow.coin}</span>
                       </td>
-                      <td
-                        className="py-2.5 px-2 text-right mono text-xs font-bold"
-                        style={{ color: deposit ? "var(--color-up)" : "var(--color-down)" }}
-                      >
+                      <td className="py-2.5 px-2 text-right mono text-xs font-bold" style={{ color: deposit ? "var(--color-up)" : "var(--color-down)" }}>
                         {deposit ? "+" : "-"}{fmtAmount(flow.amount, flow.decimals)}
                       </td>
                       <td className="py-2.5 px-2">
@@ -307,27 +303,86 @@ export function FundFlowCard({ walletAddress }: { walletAddress: string }) {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile: compact cards */}
+          <div className="sm:hidden flex flex-col gap-2">
+            {pageFlows.map((flow, i) => {
+              const deposit = isDeposit(flow.type);
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-2.5 px-3 py-2"
+                  style={{ border: "1px solid var(--border-subtle)", borderRadius: 4, background: "var(--bg)" }}
+                >
+                  <div
+                    className="flex items-center justify-center shrink-0"
+                    style={{
+                      width: 24, height: 24, borderRadius: 4,
+                      background: deposit ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+                    }}
+                  >
+                    {deposit ? (
+                      <ArrowDown size={12} style={{ color: "var(--color-up)" }} />
+                    ) : (
+                      <ArrowUp size={12} style={{ color: "var(--color-down)" }} />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="mono text-xs font-bold" style={{ color: "var(--text)" }}>{flow.coin}</span>
+                      <span
+                        className="mono text-xs font-bold tabular-nums"
+                        style={{ color: deposit ? "var(--color-up)" : "var(--color-down)" }}
+                      >
+                        {deposit ? "+" : "-"}{fmtAmount(flow.amount, flow.decimals)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="tag text-[8px]" style={{ color: "var(--text-faint)" }}>
+                        {flow.chain.replace("_", " ")}
+                      </span>
+                      <span style={{ width: 2, height: 2, borderRadius: "50%", background: "var(--text-faint)" }} />
+                      <span className="mono text-[10px]" style={{ color: "var(--text-faint)" }}>
+                        {fmtDate(flow.statusTime)}
+                      </span>
+                    </div>
+                  </div>
+                  <a
+                    href={getExplorerUrl(flow.txHash, flow.chain)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center shrink-0 transition-colors"
+                    style={{ color: "var(--text-faint)" }}
+                  >
+                    <ExternalLink size={12} />
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+          
             {totalPages > 1 && (
               <div className="flex items-center justify-between py-3 px-2">
-                <span className="tag" style={{ color: "var(--text-faint)" }}>
+                <span className="tag text-[9px] sm:text-xs" style={{ color: "var(--text-faint)" }}>
                   {page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length}
                 </span>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     disabled={page === 0}
-                    className="flex items-center justify-center w-7 h-7 transition-colors disabled:opacity-30"
+                    className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 transition-colors disabled:opacity-30"
                     style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
                   >
                     <span style={{ fontSize: 14 }}>‹</span>
                   </button>
-                  <span className="tag px-2" style={{ color: "var(--text-faint)" }}>
+                  <span className="tag px-2 text-[9px] sm:text-xs" style={{ color: "var(--text-faint)" }}>
                     {page + 1}/{totalPages}
                   </span>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                     disabled={page === totalPages - 1}
-                    className="flex items-center justify-center w-7 h-7 transition-colors disabled:opacity-30"
+                    className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 transition-colors disabled:opacity-30"
                     style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
                   >
                     <span style={{ fontSize: 14 }}>›</span>
@@ -335,7 +390,7 @@ export function FundFlowCard({ walletAddress }: { walletAddress: string }) {
                 </div>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>
