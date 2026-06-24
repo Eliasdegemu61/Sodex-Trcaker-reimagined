@@ -30,7 +30,6 @@ import {
   Lock,
   Plus,
   Folder,
-  Palette,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -817,6 +816,37 @@ function SearchHero({
     setNewGroupName("");
   };
 
+  const deleteGroup = async (groupId: string) => {
+    if (groups.length <= 1) {
+      setWatchlistError("Cannot delete the last group.");
+      return;
+    }
+
+    if (user && supabase) {
+      const { error: addrError } = await supabase
+        .from("watchlist_addresses")
+        .delete()
+        .eq("group_id", groupId);
+      if (addrError) {
+        setWatchlistError("Could not remove addresses from Supabase.");
+        return;
+      }
+      const { error: groupError } = await supabase
+        .from("watchlist_groups")
+        .delete()
+        .eq("id", groupId);
+      if (groupError) {
+        setWatchlistError("Could not delete group from Supabase.");
+        return;
+      }
+    }
+
+    const remaining = groups.filter((g) => g.id !== groupId);
+    setGroups(remaining);
+    setWatchlist((items) => items.filter((e) => e.groupId !== groupId));
+    if (activeGroupId === groupId) setActiveGroupId(remaining[0].id);
+  };
+
   const addWatchlistEntry = async () => {
     const name = entryName.trim();
     const address = entryAddress.trim() || searchInput.trim();
@@ -895,11 +925,11 @@ function SearchHero({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center text-center py-20 px-5">
+    <div className="flex flex-col items-center justify-center text-center py-12 sm:py-20 px-5">
       {/* Icon */}
       <div
-        className="relative flex items-center justify-center mb-8 fade-up"
-        style={{ width: 72, height: 72 }}
+        className="relative flex items-center justify-center mb-5 sm:mb-8 fade-up"
+        style={{ width: 56, height: 56 }}
       >
         <div
           className="absolute inset-0 rounded-full"
@@ -908,14 +938,14 @@ function SearchHero({
         <div
           className="relative flex items-center justify-center rounded-sm"
           style={{
-            width: 56,
-            height: 56,
+            width: 44,
+            height: 44,
             background: "var(--bg-surface)",
             border: "1px solid var(--accent)",
           }}
         >
           <CornerMarks size={8} inset={-1} thickness={1.5} />
-          <Search size={24} style={{ color: "var(--accent)" }} />
+          <Search size={20} style={{ color: "var(--accent)" }} />
         </div>
       </div>
 
@@ -930,20 +960,20 @@ function SearchHero({
           className="text-[26px] sm:text-[48px] font-bold leading-none tracking-tight"
           style={{ color: "var(--text)", letterSpacing: "-0.02em" }}
         >
-          Reveal Any Address
+          Track Any Address
         </h1>
       </div>
 
       <p
-        className="text-[13px] sm:text-base mb-7 sm:mb-10 max-w-md fade-up fade-up-2"
+        className="text-[12px] sm:text-base mb-5 sm:mb-10 max-w-md fade-up fade-up-2"
         style={{ color: "var(--text-muted)" }}
       >
-        Enter a wallet address to uncover its complete SoDEX trading portfolio —
+        Enter a wallet address to see its full SoDEX trading portfolio —
         PnL, volume, rank, markets, and trade history.
       </p>
 
       {/* Search bar */}
-      <div className="w-full max-w-[560px] fade-up fade-up-3">
+      <div className="w-full max-w-[560px] fade-up fade-up-3 mt-2 sm:mt-0">
         <div
           className="relative flex items-center"
           style={{
@@ -1002,208 +1032,280 @@ function SearchHero({
 
       {/* Watchlist workspace */}
       <div
-        className="w-full max-w-[820px] mt-8 sm:mt-14 fade-up fade-up-4 text-left overflow-hidden"
-        style={{ border: "1px solid var(--border)", background: "var(--bg-surface)" }}
+        className="w-full max-w-[820px] mt-6 sm:mt-14 fade-up fade-up-4 text-left"
+        style={{
+          border: "1px solid var(--border)",
+          background: "var(--bg-surface)",
+          borderRadius: "var(--r-card)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+        }}
       >
-        <div
-          className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5"
-          style={{ borderBottom: "1px solid var(--border-subtle)" }}
-        >
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Bookmark size={14} style={{ color: "var(--accent)" }} />
-              <span className="tag" style={{ color: "var(--accent)" }}>WATCHLIST</span>
+        {/* Header */}
+        <div className="p-4 sm:p-6" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div
+                className="flex items-center justify-center shrink-0"
+                style={{
+                  width: 30, height: 30, borderRadius: "var(--r-sm)",
+                  background: "var(--accent-dim)",
+                }}
+              >
+                <Bookmark size={14} style={{ color: "var(--accent)" }} />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-xl font-bold leading-tight" style={{ color: "var(--text)" }}>
+                  Watchlist
+                </h2>
+                <p className="text-[11px] sm:text-sm" style={{ color: "var(--text-muted)" }}>
+                  {watchlist.length} saved · {groups.length} groups
+                </p>
+              </div>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold leading-tight" style={{ color: "var(--text)" }}>
-              Saved addresses
-            </h2>
-            <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-              Name wallets, color them, group them, then track with one click.
-            </p>
+            <Link
+              href="/account"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 tag font-bold transition-colors"
+              style={{
+                border: "1px solid var(--border)",
+                color: "var(--text-muted)",
+                borderRadius: "var(--r-sm)",
+                background: "var(--bg)",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--accent)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}
+            >
+              {user ? <UserRound size={12} /> : <Lock size={12} />}
+              <span className="hidden sm:inline">{user ? "ACCOUNT" : "SIGN IN"}</span>
+            </Link>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 lg:min-w-[300px]">
-            <div className="relative flex-1">
-              <Folder size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-faint)" }} />
-              <input
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void addGroup();
-                }}
-                placeholder="New group"
-                className="w-full bg-transparent outline-none text-sm py-2.5 pl-9 pr-3"
-                style={{ border: "1px solid var(--border)", color: "var(--text)" }}
-              />
-            </div>
+          {/* Sync status */}
+          <div className="flex items-center gap-2 mt-2.5 sm:mt-3">
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={{ background: user ? "var(--green)" : "var(--text-faint)" }}
+            />
+            <p className="text-[11px] sm:text-xs truncate" style={{ color: watchlistError ? "var(--red)" : "var(--text-faint)" }}>
+              {watchlistLoading
+                ? "Loading saved watchlist..."
+                : watchlistError
+                ? watchlistError
+                : user
+                ? `Synced as ${user.email}`
+                : "Local only — sign in to sync across devices"}
+            </p>
+          </div>
+        </div>
+
+        {/* Nested tree: groups with addresses indented below */}
+        <div className="p-4 sm:p-6">
+          {groups.map((group) => {
+            const entries = watchlist.filter((entry) => entry.groupId === group.id);
+            const isActive = group.id === activeGroupId;
+            return (
+              <div key={group.id} className="mb-3 sm:mb-4 last:mb-0">
+                {/* Group header row */}
+                <div
+                  className="flex items-center gap-2 px-2.5 sm:px-3 py-2 sm:py-2.5 transition-colors cursor-pointer"
+                  style={{
+                    borderRadius: "var(--r-sm)",
+                    background: isActive ? "var(--accent-dim)" : "var(--bg)",
+                    border: "1px solid var(--border-subtle)",
+                  }}
+                  onClick={() => setActiveGroupId(group.id)}
+                >
+                  <span
+                    className="flex items-center justify-center shrink-0"
+                    style={{ width: 18, height: 18 }}
+                  >
+                    <Folder size={12} style={{ color: isActive ? "var(--accent)" : "var(--text-faint)" }} />
+                  </span>
+                  <span className="tag font-bold text-xs sm:text-sm" style={{ color: "var(--text)" }}>
+                    {group.name}
+                  </span>
+                  <span
+                    className="mono text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5"
+                    style={{
+                      color: "var(--text-faint)",
+                      border: "1px solid var(--border-subtle)",
+                      borderRadius: "var(--r-sm)",
+                    }}
+                  >
+                    {entries.length}
+                  </span>
+                  <div className="flex-1" />
+                  {groups.length > 1 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); void deleteGroup(group.id); }}
+                      className="flex items-center justify-center w-5 h-5 transition-colors"
+                      style={{ color: "var(--text-faint)", borderRadius: "50%" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.background = "rgba(204,46,46,0.08)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-faint)"; e.currentTarget.style.background = "transparent"; }}
+                      title={`Delete ${group.name}`}
+                    >
+                      <X size={11} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Addresses indented under group */}
+                {entries.length > 0 && (
+                  <div className="ml-3 sm:ml-4 mt-1 sm:mt-1.5 border-l" style={{ borderColor: "var(--border-subtle)" }}>
+                    {entries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="flex items-center gap-2 sm:gap-3 pl-3 sm:pl-4 pr-2 py-1.5 sm:py-2 transition-colors"
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full shrink-0"
+                          style={{ background: entry.color }}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-xs sm:text-sm truncate" style={{ color: "var(--text)" }}>{entry.name}</span>
+                            {entry.address === searchInput.trim() && <Check size={10} style={{ color: "var(--green)" }} />}
+                          </div>
+                          <span className="mono text-[9px] sm:text-[10px] break-all" style={{ color: "var(--text-faint)" }}>
+                            {entry.address.slice(0, 10)}…{entry.address.slice(-6)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                          <button
+                            onClick={() => onTrackAddress(entry.address)}
+                            className="px-2 sm:px-2.5 py-1 tag font-bold text-[9px] sm:text-[10px] transition-colors"
+                            style={{
+                              border: "1px solid var(--border)",
+                              color: "var(--text-muted)",
+                              borderRadius: "var(--r-sm)",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.color = "var(--accent-fg)"; e.currentTarget.style.borderColor = "var(--accent)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.borderColor = "var(--border)"; }}
+                          >
+                            TRACK
+                          </button>
+                          <button
+                            onClick={() => removeWatchlistEntry(entry.id)}
+                            className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 transition-colors"
+                            style={{ color: "var(--text-faint)", borderRadius: "var(--r-sm)" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.background = "rgba(204,46,46,0.08)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-faint)"; e.currentTarget.style.background = "transparent"; }}
+                            title="Remove"
+                          >
+                            <X size={11} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {entries.length === 0 && (
+                  <div className="ml-3 sm:ml-4 mt-1 sm:mt-1.5 pl-3 sm:pl-4 py-1.5 sm:py-2 border-l" style={{ borderColor: "var(--border-subtle)" }}>
+                    <span className="text-[11px] sm:text-xs" style={{ color: "var(--text-faint)" }}>No addresses yet</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Add group inline */}
+          <div className="flex items-center gap-2 mt-2.5 sm:mt-3 pt-2.5 sm:pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+            <input
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") void addGroup(); }}
+              placeholder="New group name…"
+              className="flex-1 bg-transparent outline-none text-xs sm:text-sm px-3 py-2"
+              style={{
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+                borderRadius: "var(--r-sm)",
+                background: "var(--bg)",
+              }}
+            />
             <button
               onClick={() => void addGroup()}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 tag font-bold"
-              style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 tag font-bold transition-colors"
+              style={{
+                border: "1px solid var(--border)",
+                color: "var(--text-muted)",
+                borderRadius: "var(--r-sm)",
+                background: "var(--bg)",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--accent)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}
             >
-              <Plus size={13} />
+              <Plus size={12} />
               GROUP
             </button>
           </div>
-        </div>
 
-        <div
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3"
-          style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--spotlight)" }}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div
-              className="flex items-center justify-center shrink-0"
-              style={{ width: 34, height: 34, border: "1px solid var(--border)", background: "var(--bg-surface)" }}
-            >
-              {user ? <UserRound size={15} style={{ color: "var(--green)" }} /> : <Lock size={15} style={{ color: "var(--text-faint)" }} />}
+          {/* Add address form — adds to active group */}
+          <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="tag text-[10px] sm:text-xs" style={{ color: "var(--text-faint)" }}>
+                ADD TO: <span style={{ color: "var(--accent)" }}>{groups.find((g) => g.id === activeGroupId)?.name ?? "—"}</span>
+              </span>
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>
-                {user ? user.email : "Local watchlist"}
-              </p>
-              <p className="text-xs" style={{ color: watchlistError ? "var(--red)" : "var(--text-muted)" }}>
-                {watchlistLoading ? "Loading saved watchlist..." : watchlistError ?? (user ? "Synced account" : "Sign in to sync across devices")}
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/account"
-            className="flex items-center justify-center px-4 py-2 tag font-bold"
-            style={{ border: "1px solid var(--border)", color: "var(--text)", background: "var(--bg-surface)" }}
-          >
-            {user ? "ACCOUNT" : "SIGN IN"}
-          </Link>
-        </div>
-
-        <div className="flex flex-wrap gap-2 p-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
-          {groups.map((group) => {
-            const count = watchlist.filter((entry) => entry.groupId === group.id).length;
-            const active = group.id === activeGroupId;
-            return (
-              <button
-                key={group.id}
-                onClick={() => setActiveGroupId(group.id)}
-                className="flex items-center gap-2 px-3 py-2 tag transition-colors"
-                style={{
-                  border: "1px solid var(--border)",
-                  background: active ? "var(--accent)" : "transparent",
-                  color: active ? "var(--accent-fg)" : "var(--text-muted)",
-                }}
-              >
-                {group.name}
-                <span
-                  className="mono text-[10px] px-1.5 py-0.5"
-                  style={{
-                    border: `1px solid ${active ? "rgba(0,0,0,0.18)" : "var(--border-subtle)"}`,
-                    color: active ? "var(--accent-fg)" : "var(--text-faint)",
-                  }}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="grid lg:grid-cols-[320px_1fr]">
-          <div className="p-4 lg:border-r" style={{ borderColor: "var(--border-subtle)" }}>
-            <div className="grid gap-3">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 value={entryName}
                 onChange={(e) => setEntryName(e.target.value)}
-                placeholder="Wallet name"
-                className="w-full bg-transparent outline-none text-sm px-3 py-3"
-                style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+                placeholder="Name (e.g. My Whale)"
+                className="flex-1 bg-transparent outline-none text-xs sm:text-sm px-3 py-2 sm:py-2.5"
+                style={{
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                  borderRadius: "var(--r-sm)",
+                  background: "var(--bg)",
+                }}
               />
               <input
                 value={entryAddress}
                 onChange={(e) => setEntryAddress(e.target.value)}
-                placeholder={searchInput.trim() ? "Use typed address or paste another" : "Wallet address"}
-                className="w-full bg-transparent outline-none mono text-sm px-3 py-3"
-                style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+                placeholder={searchInput.trim() ? "Use typed address or paste another" : "0x… wallet address"}
+                className="flex-1 bg-transparent outline-none mono text-xs sm:text-sm px-3 py-2 sm:py-2.5"
+                style={{
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                  borderRadius: "var(--r-sm)",
+                  background: "var(--bg)",
+                }}
               />
-
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Palette size={14} style={{ color: "var(--text-faint)" }} />
-                  <span className="tag" style={{ color: "var(--text-faint)" }}>COLOR</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {WATCHLIST_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setEntryColor(color)}
-                      aria-label={`Pick ${color}`}
-                      className="w-6 h-6 transition-transform"
-                      style={{
-                        background: color,
-                        border: entryColor === color ? "2px solid var(--text)" : "1px solid var(--border)",
-                        transform: entryColor === color ? "scale(1.08)" : "scale(1)",
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {watchlistError && (
-                <span className="mono text-xs" style={{ color: "var(--red)" }}>{watchlistError}</span>
-              )}
-
-              <button
-                onClick={addWatchlistEntry}
-                className="flex items-center justify-center gap-2 px-4 py-3 tag font-bold"
-                style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
-              >
-                <Plus size={14} />
-                ADD ADDRESS
-              </button>
-            </div>
-          </div>
-
-          <div className="min-h-[220px]">
-            {activeEntries.length === 0 ? (
-              <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-center px-6">
-                <Wallet size={24} style={{ color: "var(--text-faint)" }} />
-                <p className="mt-3 font-semibold" style={{ color: "var(--text)" }}>No addresses in this group yet</p>
-                <p className="text-sm max-w-sm mt-1" style={{ color: "var(--text-muted)" }}>
-                  Save the wallets you check often so you do not have to paste them every time.
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y" style={{ borderColor: "var(--border-subtle)" }}>
-                {activeEntries.map((entry) => (
-                  <div key={entry.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="w-3 h-10 shrink-0" style={{ background: entry.color }} />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold truncate" style={{ color: "var(--text)" }}>{entry.name}</span>
-                          {entry.address === searchInput.trim() && <Check size={13} style={{ color: "var(--green)" }} />}
-                        </div>
-                        <span className="mono text-xs break-all" style={{ color: "var(--text-faint)" }}>{entry.address}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => onTrackAddress(entry.address)}
-                        className="px-3 py-2 tag font-bold"
-                        style={{ border: "1px solid var(--border)", color: "var(--text)" }}
-                      >
-                        TRACK
-                      </button>
-                      <button
-                        onClick={() => removeWatchlistEntry(entry.id)}
-                        className="flex items-center justify-center w-9 h-9"
-                        style={{ border: "1px solid var(--border)", color: "var(--text-faint)" }}
-                        title="Remove address"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </div>
+              <div className="flex items-center gap-1.5 px-2 py-2 sm:py-2.5" style={{ border: "1px solid var(--border)", borderRadius: "var(--r-sm)", background: "var(--bg)" }}>
+                {WATCHLIST_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setEntryColor(color)}
+                    aria-label={`Pick ${color}`}
+                    className="w-4 h-4 transition-transform"
+                    style={{
+                      background: color,
+                      borderRadius: "50%",
+                      border: entryColor === color ? "2px solid var(--text)" : "2px solid transparent",
+                      transform: entryColor === color ? "scale(1.15)" : "scale(1)",
+                      boxShadow: entryColor === color ? `0 0 0 1px ${color}` : "none",
+                    }}
+                  />
                 ))}
               </div>
+              <button
+                onClick={addWatchlistEntry}
+                className="flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 tag font-bold transition-transform"
+                style={{
+                  background: "var(--accent)",
+                  color: "var(--accent-fg)",
+                  borderRadius: "var(--r-sm)",
+                }}
+              >
+                <Plus size={14} />
+                ADD
+              </button>
+            </div>
+            {watchlistError && (
+              <span className="mono text-[11px] sm:text-xs mt-2 block" style={{ color: "var(--red)" }}>{watchlistError}</span>
             )}
           </div>
         </div>
