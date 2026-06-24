@@ -384,7 +384,7 @@ export function Navbar() {
       {moreOpen && (
         <div
           className="md:hidden fixed inset-0 z-[60]"
-          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }}
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
           onClick={() => setMoreOpen(false)}
         />
       )}
@@ -394,7 +394,7 @@ export function Navbar() {
       <div
         className="md:hidden fixed left-0 right-0 z-[70] rounded-t-2xl overflow-hidden"
         style={{
-          bottom: 60,
+          bottom: 0,
           background: "var(--bg-surface)",
           borderTop: "1px solid var(--border)",
           animation: "sheetSlideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1)",
