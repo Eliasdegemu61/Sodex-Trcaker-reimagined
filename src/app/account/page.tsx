@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description: "Manage your SoDEX Tracker account and synced watchlist.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function Account() {
   return (
     <main>
