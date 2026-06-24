@@ -65,6 +65,11 @@
   to   { transform: translateY(0); }
 }
 
+@keyframes expandDown {
+  from { opacity: 0; transform: translateY(-8px); max-height: 0; }
+  to   { opacity: 1; transform: translateY(0); max-height: 500px; }
+}
+
 /* ════════════════════════════════════════════════════════════════
    SoDEX Tracker — minimal charcoal design system
    ════════════════════════════════════════════════════════════════ */

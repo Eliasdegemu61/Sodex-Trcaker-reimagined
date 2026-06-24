@@ -48,6 +48,7 @@ export function VolumeCard({ isExpanded, onMouseEnter, onMouseLeave }: Props) {
       value={fmtVol(total ?? 0)}
       rawValue={total ?? 0}
       format={fmtVol}
+      bars={topPairs.map((p) => p.volume)}
       expandLabel="Top 5 pairs"
       expandContent={
         <div className="flex flex-col gap-1.5">

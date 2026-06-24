@@ -192,8 +192,12 @@ function MobileStatsGrid() {
       {/* Expansion panel */}
       {expanded && (
         <div
-          className="mt-2 p-3.5"
-          style={{ border: "1px solid var(--border)", background: "var(--bg-surface)" }}
+          className="mt-2 p-3.5 overflow-hidden"
+          style={{
+            border: "1px solid var(--border)",
+            background: "var(--bg-surface)",
+            animation: "expandDown 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)",
+          }}
         >
           {renderExpansion()}
         </div>

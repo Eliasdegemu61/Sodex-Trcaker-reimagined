@@ -55,6 +55,7 @@ export function OICard({ isExpanded, onMouseEnter, onMouseLeave }: Props) {
       value={fmt(total ?? 0)}
       rawValue={total ?? 0}
       format={fmt}
+      bars={topPairs.map((p) => p.value)}
       deltaLabel={delta?.label}
       deltaTone={delta ? (delta.up ? "up" : "down") : "neutral"}
       expandLabel="Top 5 by OI"
