@@ -304,9 +304,6 @@ export function Hero() {
 
           {/* right column — live stat panel */}
           <div className="hidden lg:flex flex-col gap-5 fade-up fade-up-4">
-            <span className="text-[11px] font-medium mb-1 px-0.5" style={{ color: "var(--text-faint)" }}>
-              Network · 24H
-            </span>
             <VolumeCard
               isExpanded={hoveredCard === "volume"}
               onMouseEnter={() => setHoveredCard("volume")}
