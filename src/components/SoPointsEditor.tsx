@@ -192,21 +192,55 @@ export function SoPointsEditor() {
   };
 
   const download = useCallback(async () => {
-    if (!cardRef.current) return;
+    const node = cardRef.current;
+    if (!node || downloading) return;
     setDownloading(true);
     try {
-      const dataUrl = await toPng(cardRef.current, {
-        pixelRatio: 3,
-        cacheBust: true,
-      });
+      // make sure the web fonts have finished loading before we snapshot
+      try {
+        await document.fonts?.ready;
+      } catch {
+        /* ignore */
+      }
+
+      // render at ~1080px wide regardless of preview size, capped so phones
+      // don't choke on a huge canvas
+      const ratio = Math.min(Math.max(1080 / node.offsetWidth, 1), 2.5);
+
+      const withTimeout = <T,>(p: Promise<T>, ms: number) =>
+        Promise.race([
+          p,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error("render-timeout")), ms)
+          ),
+        ]);
+
+      let dataUrl: string;
+      try {
+        // first try embedding the fonts for a pixel-perfect result
+        dataUrl = await withTimeout(
+          toPng(node, { pixelRatio: ratio, cacheBust: true }),
+          9000
+        );
+      } catch {
+        // font embedding is the usual cause of a stall — fall back without it
+        dataUrl = await withTimeout(
+          toPng(node, { pixelRatio: ratio, cacheBust: true, skipFonts: true }),
+          9000
+        );
+      }
+
       const a = document.createElement("a");
       a.download = `sopoints-${tier}-${cardType}.png`;
       a.href = dataUrl;
       a.click();
+    } catch (err) {
+      console.error("SoPoints export failed:", err);
+      alert("Sorry — the card couldn't be exported. Please try again.");
     } finally {
       setDownloading(false);
     }
-  }, [tier, cardType]);
+  }, [tier, cardType, downloading]);
 
   /* the card background, depending on the chosen mode */
   const cardBackground =
@@ -249,6 +283,9 @@ export function SoPointsEditor() {
                 background: cardBackground,
                 color: "#fff",
                 boxShadow: "0 24px 60px -24px rgba(0,0,0,0.5)",
+                // size all text relative to the card width (not the viewport) so the
+                // layout is identical on phone, desktop, and in the exported PNG
+                containerType: "inline-size",
               }}
             >
               {/* uploaded image layer */}
@@ -311,7 +348,7 @@ export function SoPointsEditor() {
                     <span
                       style={{
                         fontWeight: 800,
-                        fontSize: "clamp(18px, 5.4vw, 34px)",
+                        fontSize: "clamp(15px, 5.2cqi, 34px)",
                         letterSpacing: "0.01em",
                         textShadow: "0 1px 8px rgba(0,0,0,0.25)",
                       }}
@@ -326,11 +363,12 @@ export function SoPointsEditor() {
                 <div className="flex-1 flex flex-col justify-center" style={{ marginTop: "2%" }}>
                   <span
                     style={{
-                      fontSize: "clamp(10px, 2.6vw, 15px)",
+                      fontSize: "clamp(8px, 2.4cqi, 15px)",
                       letterSpacing: "0.14em",
                       fontWeight: 600,
                       color: "rgba(255,255,255,0.62)",
                       textTransform: "uppercase",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {pointsLabel}
@@ -338,7 +376,7 @@ export function SoPointsEditor() {
                   <div className="flex items-end gap-3" style={{ marginTop: "1.5%" }}>
                     <span
                       style={{
-                        fontSize: "clamp(38px, 13vw, 84px)",
+                        fontSize: "clamp(30px, 12.4cqi, 82px)",
                         fontWeight: 800,
                         lineHeight: 0.92,
                         letterSpacing: "-0.03em",
@@ -349,7 +387,7 @@ export function SoPointsEditor() {
                     </span>
                     <span
                       style={{
-                        fontSize: "clamp(9px, 2.4vw, 15px)",
+                        fontSize: "clamp(8px, 2.2cqi, 15px)",
                         fontWeight: 700,
                         letterSpacing: "0.12em",
                         color: "rgba(255,255,255,0.5)",
@@ -363,7 +401,7 @@ export function SoPointsEditor() {
                     <span
                       style={{
                         marginTop: "2.5%",
-                        fontSize: "clamp(10px, 2.6vw, 15px)",
+                        fontSize: "clamp(8px, 2.4cqi, 15px)",
                         letterSpacing: "0.1em",
                         fontWeight: 600,
                         color: "rgba(255,255,255,0.6)",
@@ -403,7 +441,7 @@ export function SoPointsEditor() {
                       />
                       <span
                         style={{
-                          fontSize: "clamp(10px, 2.7vw, 16px)",
+                          fontSize: "clamp(9px, 2.5cqi, 16px)",
                           fontWeight: 600,
                           color: "#fff",
                           whiteSpace: "nowrap",
