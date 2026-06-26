@@ -54,10 +54,9 @@ const NAV_ITEMS: NavItem[] = [
       },
       {
         label: "Accrued Funding",
-        href: "#",
+        href: "/accrued-funding",
         description: "Track funding payments over time",
         icon: <Coins size={14} />,
-        comingSoon: true,
       },
       {
         label: "Reverse Search",
