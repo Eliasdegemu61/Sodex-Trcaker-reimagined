@@ -244,7 +244,7 @@ const SHEET_PAGES: SheetPage[] = [
   { label: "Trade History", href: "/trade-history", icon: History },
   { label: "Journal", href: "#", icon: BookOpen, comingSoon: true },
   { label: "Demo Trading", href: "#", icon: PlayCircle, comingSoon: true },
-  { label: "Accrued Funding", href: "#", icon: Coins, comingSoon: true },
+  { label: "Accrued Funding", href: "/accrued-funding", icon: Coins },
   { label: "Reverse Search", href: "#", icon: SearchX, comingSoon: true },
   { label: "Copy Trading", href: "#", icon: Copy, comingSoon: true },
   { label: "Trading Bots", href: "#", icon: Bot, comingSoon: true },
