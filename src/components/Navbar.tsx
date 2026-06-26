@@ -14,24 +14,30 @@ type NavDropdown = { kind: "dropdown"; label: string; badge?: string; icon: Reac
 type NavItem = NavLink | NavDropdown;
 
 const NAV_ITEMS: NavItem[] = [
-  { kind: "link", label: "Markets", href: "/#markets" },
+  { kind: "link", label: "Markets", href: "/" },
   { kind: "link", label: "Tracker", href: "/tracker" },
   { kind: "link", label: "Portfolio", href: "/portfolio" },
   { kind: "link", label: "Leaderboard", href: "/leaderboard" },
   { kind: "link", label: "SoPoints", href: "/sopoints", icon: <Zap size={13} /> },
   {
     kind: "dropdown",
-    label: "Beta",
-    badge: "BETA",
-    icon: <FlaskConical size={13} />,
+    label: "More",
+    icon: <MoreHorizontal size={13} />,
     items: [
       {
         label: "Trade History",
         href: "/trade-history",
         description: "Full trade export & analytics",
         icon: <History size={14} />,
-        comingSoon: true,
       },
+    ],
+  },
+  {
+    kind: "dropdown",
+    label: "Beta",
+    badge: "BETA",
+    icon: <FlaskConical size={13} />,
+    items: [
       {
         label: "Journal",
         href: "#",
@@ -60,13 +66,6 @@ const NAV_ITEMS: NavItem[] = [
         icon: <SearchX size={14} />,
         comingSoon: true,
       },
-    ],
-  },
-  {
-    kind: "dropdown",
-    label: "More",
-    icon: <MoreHorizontal size={13} />,
-    items: [
       {
         label: "Copy Trading",
         href: "#",
@@ -140,7 +139,7 @@ function NavDropdownMenu({
 
       {open && item.items.length > 0 && (
         <div
-          className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 min-w-[220px]"
+          className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5"
           style={{
             background: "var(--panel-bg)",
             backdropFilter: "blur(16px)",
@@ -149,11 +148,20 @@ function NavDropdownMenu({
             boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
             borderRadius: 10,
             zIndex: 60,
+            minWidth: item.items.length >= 4 ? 300 : 180,
           }}
           onMouseEnter={show}
           onMouseLeave={hide}
         >
-          <div className="p-1.5 flex flex-col gap-0.5">
+          {/* 2-col grid for 4+ items, single col otherwise */}
+          <div
+            className="p-1.5"
+            style={{
+              display: "grid",
+              gridTemplateColumns: item.items.length >= 4 ? "1fr 1fr" : "1fr",
+              gap: 2,
+            }}
+          >
             {item.items.map((child) => {
               const isSoon = child.comingSoon;
               const isFlashing = flashedHref === child.href + child.label;
@@ -163,34 +171,27 @@ function NavDropdownMenu({
                   <button
                     key={child.href + child.label}
                     onClick={() => handleComingSoon(child.href + child.label)}
-                    className="flex items-start gap-3 px-3 py-2.5 rounded-md w-full text-left transition-colors"
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md w-full text-left transition-colors"
                     style={{ background: isFlashing ? "var(--bg-elevated)" : "transparent" }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-elevated)"; }}
                     onMouseLeave={(e) => { if (!isFlashing) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                   >
-                    <span className="mt-0.5 shrink-0" style={{ color: "var(--text-faint)" }}>{child.icon}</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[13px] font-medium leading-tight" style={{ color: "var(--text-muted)" }}>
-                          {child.label}
-                        </span>
-                        <span
-                          className="text-[9px] font-bold px-1.5 py-0.5 rounded leading-none shrink-0"
-                          style={{
-                            background: isFlashing ? "var(--accent-dim)" : "var(--bg-elevated)",
-                            color: isFlashing ? "var(--accent)" : "var(--text-faint)",
-                            border: `1px solid ${isFlashing ? "var(--accent)" : "var(--border)"}`,
-                            letterSpacing: "0.05em",
-                            transition: "all 0.2s",
-                          }}
-                        >
-                          {isFlashing ? "COMING SOON" : "SOON"}
-                        </span>
-                      </div>
-                      <div className="text-[11px] mt-0.5" style={{ color: "var(--text-faint)" }}>
-                        {child.description}
-                      </div>
-                    </div>
+                    <span className="shrink-0" style={{ color: "var(--text-faint)" }}>{child.icon}</span>
+                    <span className="text-[12.5px] font-medium flex-1 text-left" style={{ color: "var(--text-muted)" }}>
+                      {child.label}
+                    </span>
+                    <span
+                      className="text-[8px] font-bold px-1 py-0.5 leading-none shrink-0"
+                      style={{
+                        background: isFlashing ? "var(--accent-dim)" : "transparent",
+                        color: isFlashing ? "var(--accent)" : "var(--text-faint)",
+                        border: `1px solid ${isFlashing ? "var(--accent)" : "var(--border)"}`,
+                        letterSpacing: "0.04em",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      {isFlashing ? "SOON" : "SOON"}
+                    </span>
                   </button>
                 );
               }
@@ -199,7 +200,7 @@ function NavDropdownMenu({
                 <Link
                   key={child.href}
                   href={child.href}
-                  className="flex items-start gap-3 px-3 py-2.5 rounded-md transition-colors"
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-md transition-colors"
                   style={{ color: "var(--text-muted)" }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.background = "var(--bg-elevated)";
@@ -211,15 +212,10 @@ function NavDropdownMenu({
                   }}
                   onClick={() => setOpen(false)}
                 >
-                  <span className="mt-0.5 shrink-0" style={{ color: "var(--accent)" }}>{child.icon}</span>
-                  <div className="min-w-0">
-                    <div className="text-[13px] font-medium leading-tight" style={{ color: "var(--text)" }}>
-                      {child.label}
-                    </div>
-                    <div className="text-[11px] mt-0.5" style={{ color: "var(--text-faint)" }}>
-                      {child.description}
-                    </div>
-                  </div>
+                  <span className="shrink-0" style={{ color: "var(--accent)" }}>{child.icon}</span>
+                  <span className="text-[12.5px] font-medium" style={{ color: "var(--text)" }}>
+                    {child.label}
+                  </span>
                 </Link>
               );
             })}
@@ -246,7 +242,7 @@ const SHEET_PAGES: SheetPage[] = [
   { label: "Portfolio", href: "/portfolio", icon: Wallet },
   { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
   { label: "SoPoints", href: "/sopoints", icon: Zap },
-  { label: "Trade History", href: "/trade-history", icon: History, comingSoon: true },
+  { label: "Trade History", href: "/trade-history", icon: History },
   { label: "Journal", href: "#", icon: BookOpen, comingSoon: true },
   { label: "Demo Trading", href: "#", icon: PlayCircle, comingSoon: true },
   { label: "Accrued Funding", href: "#", icon: Coins, comingSoon: true },

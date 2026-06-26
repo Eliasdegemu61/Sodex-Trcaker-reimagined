@@ -578,7 +578,7 @@ export function VolumeChart() {
                       stroke="var(--border-subtle)" strokeWidth={1}
                       strokeDasharray={i === 0 ? "0" : "3 4"} opacity={i === 0 ? 0.7 : 0.45}
                     />
-                    <text x={W - 4} y={y(v) - 4} textAnchor="end" className="mono" fontSize={18} fill="var(--text-faint)">
+                    <text x={W - 4} y={y(v) - 4} textAnchor="end" className="mono" fontSize={10} fill="var(--text-faint)">
                       {fmtVol(v, 0)}
                     </text>
                   </g>
@@ -624,7 +624,7 @@ export function VolumeChart() {
                   <g pointerEvents="none">
                     <circle cx={x(peakIdx)} cy={y(points[peakIdx].total)} r={4} fill="var(--accent)" stroke="var(--bg)" strokeWidth={1.5} />
                     <line x1={x(peakIdx)} x2={x(peakIdx)} y1={y(points[peakIdx].total) - 8} y2={PAD.t - 2} stroke="var(--accent)" strokeWidth={1} strokeDasharray="2 3" opacity={0.6} />
-                    <text x={x(peakIdx)} y={PAD.t - 6} textAnchor={peakIdx > n / 2 ? "end" : "start"} className="mono" fontSize={16} fontWeight={700} fill="var(--accent)">
+                    <text x={x(peakIdx)} y={PAD.t - 6} textAnchor={peakIdx > n / 2 ? "end" : "start"} className="mono" fontSize={10} fontWeight={700} fill="var(--accent)">
                       PEAK {fmtVol(points[peakIdx].total, 1)}
                     </text>
                   </g>
@@ -632,7 +632,7 @@ export function VolumeChart() {
 
                 {/* X labels */}
                 {xLabels.map(({ i, label }) => (
-                  <text key={i} x={x(i)} y={H - 8} textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"} className="mono" fontSize={18} fill="var(--text-faint)">
+                  <text key={i} x={x(i)} y={H - 8} textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"} className="mono" fontSize={10} fill="var(--text-faint)">
                     {label}
                   </text>
                 ))}

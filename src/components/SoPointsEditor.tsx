@@ -267,22 +267,22 @@ export function SoPointsEditor() {
     reader.readAsDataURL(file);
   };
 
-  /* snapshot the card to a PNG data URL, with a font-embed fallback */
+  /* snapshot the card to a PNG data URL.
+     Mobile browsers hang indefinitely when html-to-image fetches external font
+     files, so we skip font embedding on the first attempt (fast path). If that
+     fails we fall back to a full render with cache-busting. */
   const snapshotCard = useCallback(async (node: HTMLElement, ratio: number) => {
-    const withTimeout = <T,>(p: Promise<T>, ms: number) =>
-      Promise.race([
-        p,
-        new Promise<T>((_, reject) =>
-          setTimeout(() => reject(new Error("render-timeout")), ms)
-        ),
-      ]);
+    const attempt = (opts: Parameters<typeof toPng>[1], ms: number) =>
+      new Promise<string>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("render-timeout")), ms);
+        toPng(node, opts)
+          .then((url) => { clearTimeout(timer); resolve(url); })
+          .catch((err) => { clearTimeout(timer); reject(err); });
+      });
     try {
-      return await withTimeout(toPng(node, { pixelRatio: ratio, cacheBust: true }), 9000);
+      return await attempt({ pixelRatio: ratio, skipFonts: true }, 6000);
     } catch {
-      return await withTimeout(
-        toPng(node, { pixelRatio: ratio, cacheBust: true, skipFonts: true }),
-        9000
-      );
+      return await attempt({ pixelRatio: ratio, cacheBust: true, skipFonts: true }, 8000);
     }
   }, []);
 

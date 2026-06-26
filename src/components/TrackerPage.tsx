@@ -545,6 +545,17 @@ function PnlValue({ value, big = false }: { value: number; big?: boolean }) {
    Portfolio bind hero (portfolio mode, no address bound yet)
    ════════════════════════════════════════════════════════════════ */
 
+const PORTFOLIO_GHOST_CARDS = [
+  { label: "NET VALUE",    value: "$45,230",  sub: "+12.4% all time" },
+  { label: "MARGIN USED",  value: "$2,261",   sub: "5.0% of equity"  },
+  { label: "RANK",         value: "#47",      sub: "top 0.3%"        },
+  { label: "VOL 7D",       value: "$280K",    sub: "↑ from $210K"    },
+  { label: "UNREALIZED",   value: "+$1,842",  sub: "8 open positions" },
+  { label: "FUNDING",      value: "+$127",    sub: "earned this week" },
+  { label: "WIN RATE",     value: "63.2%",    sub: "321 / 507 trades" },
+  { label: "POSITIONS",    value: "8",        sub: "4 long · 4 short" },
+];
+
 function PortfolioBindHero({
   searchInput,
   setSearchInput,
@@ -565,115 +576,106 @@ function PortfolioBindHero({
   error: string | null;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center text-center py-12 sm:py-20 px-5">
-      {/* Icon */}
+    <div className="relative flex flex-col items-center justify-center text-center overflow-hidden" style={{ minHeight: 520 }}>
+
+      {/* Ghost stat cards — decorative background */}
       <div
-        className="relative flex items-center justify-center mb-6 sm:mb-8 fade-up"
-        style={{ width: 72, height: 72 }}
+        className="absolute inset-0 pointer-events-none select-none"
+        style={{
+          maskImage: "radial-gradient(ellipse 85% 75% at 50% 50%, transparent 28%, black 68%)",
+          WebkitMaskImage: "radial-gradient(ellipse 85% 75% at 50% 50%, transparent 28%, black 68%)",
+        }}
       >
         <div
-          className="absolute inset-0 rounded-full"
-          style={{ background: "var(--accent-dim)", filter: "blur(20px)" }}
-        />
-        <div
-          className="relative flex items-center justify-center rounded-sm"
-          style={{
-            width: 56,
-            height: 56,
-            background: "var(--bg-surface)",
-            border: "1px solid var(--accent)",
-          }}
+          className="grid grid-cols-4 gap-3 px-8 py-16"
+          style={{ opacity: 0.12, maxWidth: 900, margin: "0 auto" }}
         >
-          <CornerMarks size={8} inset={-1} thickness={1.5} />
-          <Bookmark size={24} style={{ color: "var(--accent)" }} />
+          {PORTFOLIO_GHOST_CARDS.map((c, i) => (
+            <div
+              key={i}
+              className="p-4"
+              style={{ border: "1px solid var(--border)", background: "var(--bg-surface)" }}
+            >
+              <div className="tag text-[9px] mb-2" style={{ color: "var(--text-faint)" }}>{c.label}</div>
+              <div className="mono text-xl font-bold" style={{ color: "var(--text)" }}>{c.value}</div>
+              <div className="mono text-[10px] mt-1" style={{ color: "var(--text-faint)" }}>{c.sub}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Title */}
-      <div className="fade-up fade-up-1 mb-3">
-        <div className="flex items-center gap-2 mb-3 justify-center">
-          <span className="w-5 h-px" style={{ background: "var(--accent)" }} />
-          <span className="tag" style={{ color: "var(--accent)" }}>MY PORTFOLIO</span>
-          <span className="w-5 h-px" style={{ background: "var(--accent)" }} />
+      {/* Foreground */}
+      <div className="relative z-10 flex flex-col items-center w-full max-w-[560px] px-5 py-16">
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+          {[
+            { label: "TRADES",  color: "var(--green)"      },
+            { label: "P&L",     color: "var(--accent)"     },
+            { label: "VOLUME",  color: "var(--accent)"     },
+            { label: "RANK",    color: "var(--accent)"     },
+            { label: "BALANCE", color: "var(--text-faint)" },
+          ].map(f => (
+            <span key={f.label} className="tag text-[10px] px-2.5 py-1 font-bold"
+              style={{ border: `1px solid ${f.color}`, color: f.color, opacity: f.color === "var(--text-faint)" ? 0.5 : 1 }}>
+              {f.label}
+            </span>
+          ))}
         </div>
-        <h1
-          className="text-[26px] sm:text-[48px] font-bold leading-none tracking-tight"
-          style={{ color: "var(--text)", letterSpacing: "-0.02em" }}
-        >
+
+        <h1 className="text-[32px] sm:text-[48px] font-bold leading-none tracking-tight mb-4"
+          style={{ color: "var(--text)", letterSpacing: "-0.02em" }}>
           Bind Your Wallet
         </h1>
-      </div>
+        <p className="text-sm mb-8 max-w-sm" style={{ color: "var(--text-muted)" }}>
+          Link your wallet address to track your SoDEX portfolio. Saved on this device — no sign-in needed.
+        </p>
 
-      <p
-        className="text-[13px] sm:text-base mb-7 sm:mb-10 max-w-md fade-up fade-up-2"
-        style={{ color: "var(--text-muted)" }}
-      >
-        Link your wallet address to track your SoDEX trading portfolio.
-        It will be saved on this device so you never have to paste it again.
-      </p>
-
-      {/* Search bar */}
-      <div className="w-full max-w-[560px] fade-up fade-up-3">
-        <div
-          className="relative flex items-center"
-          style={{
+        <div className="w-full">
+          <div className="relative flex items-center" style={{
             border: `1px solid ${searchFocused ? "var(--accent)" : "var(--border)"}`,
             background: "var(--bg-surface)",
-            boxShadow: searchFocused ? "0 0 0 1px var(--accent), 0 0 32px var(--accent-dim)" : "none",
+            boxShadow: searchFocused ? "0 0 0 1px var(--accent), 0 0 40px var(--accent-dim)" : "none",
             transition: "border-color 0.15s, box-shadow 0.15s",
-          }}
-        >
-          {searchFocused && <CornerMarks size={8} inset={-1} thickness={1.5} />}
-          <Link2 size={16} className="absolute left-4 pointer-events-none" style={{ color: "var(--text-faint)" }} />
-          <input
-            ref={searchRef}
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            onKeyDown={(e) => e.key === "Enter" && onSearch()}
-            placeholder="Enter your wallet address to bind…"
-            className="w-full bg-transparent outline-none mono text-sm py-4 pl-11 pr-28"
-            style={{ color: "var(--text)", caretColor: "var(--accent)" }}
-            spellCheck={false}
-            autoComplete="off"
-          />
-          {searchInput && (
+          }}>
+            {searchFocused && <CornerMarks size={8} inset={-1} thickness={1.5} />}
+            <Link2 size={16} className="absolute left-4 pointer-events-none" style={{ color: "var(--text-faint)" }} />
+            <input
+              ref={searchRef}
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              onKeyDown={(e) => e.key === "Enter" && onSearch()}
+              placeholder="Enter your wallet address to bind…"
+              className="w-full bg-transparent outline-none mono text-sm py-4 pl-11 pr-24"
+              style={{ color: "var(--text)", caretColor: "var(--accent)" }}
+              spellCheck={false}
+              autoComplete="off"
+            />
+            {searchInput && (
+              <button onClick={() => setSearchInput("")}
+                className="absolute right-[88px] opacity-50 hover:opacity-100 transition-opacity"
+                style={{ color: "var(--text-faint)" }}>
+                <X size={14} />
+              </button>
+            )}
             <button
-              onClick={() => setSearchInput("")}
-              className="absolute right-[92px] opacity-50 hover:opacity-100 transition-opacity"
-              style={{ color: "var(--text-faint)" }}
+              onClick={onSearch}
+              disabled={searchPending || !searchInput.trim()}
+              className="absolute right-2 sheen-host px-4 py-2 tag font-bold transition-opacity disabled:opacity-40"
+              style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
             >
-              <X size={14} />
+              {searchPending ? "…" : "BIND"}
             </button>
-          )}
-          <button
-            onClick={onSearch}
-            disabled={searchPending || !searchInput.trim()}
-            className="absolute right-2 sheen-host px-4 py-2 tag font-bold transition-opacity disabled:opacity-40"
-            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
-          >
-            {searchPending ? "…" : "BIND"}
-          </button>
-        </div>
-
-        {error && (
-          <div
-            className="mt-4 flex items-center gap-2 px-4 py-3"
-            style={{ border: "1px solid var(--red)", background: "rgba(204,46,46,0.06)" }}
-          >
-            <X size={14} style={{ color: "var(--red)" }} />
-            <span className="mono text-xs font-bold" style={{ color: "var(--red)" }}>{error}</span>
           </div>
-        )}
-      </div>
-
-      {/* Info note */}
-      <div className="mt-10 flex items-center gap-2 fade-up fade-up-4">
-        <span className="tag" style={{ color: "var(--text-faint)" }}>
-          Your address is stored locally in your browser. No authentication required.
-        </span>
+          {error && (
+            <div className="mt-4 flex items-center gap-2 px-4 py-3"
+              style={{ border: "1px solid var(--red)", background: "rgba(204,46,46,0.06)" }}>
+              <X size={14} style={{ color: "var(--red)" }} />
+              <span className="mono text-xs font-bold" style={{ color: "var(--red)" }}>{error}</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -957,115 +959,131 @@ function SearchHero({
     setWatchlist((items) => items.filter((entry) => entry.id !== id));
   };
 
+  const TRACKER_GHOST_COLS = "minmax(80px,1.2fr) 52px 70px 88px 88px 80px 80px";
+  const TRACKER_GHOST_ROWS = [
+    { sym: "BTC/USD",  side: "LONG",  size: "0.142", entry: "$62,100", mark: "$64,203", pnl: "+$297", liq: "$48,200" },
+    { sym: "ETH/USD",  side: "SHORT", size: "1.500", entry: "$3,550",  mark: "$3,412",  pnl: "+$207", liq: "$4,260"  },
+    { sym: "SOL/USD",  side: "LONG",  size: "12.00", entry: "$145.20", mark: "$148.20", pnl: "+$36",  liq: "$108.90" },
+    { sym: "XRP/USD",  side: "SHORT", size: "500.0", entry: "$0.630",  mark: "$0.614",  pnl: "+$8",   liq: "$0.756"  },
+    { sym: "LINK/USD", side: "LONG",  size: "30.00", entry: "$14.80",  mark: "$15.24",  pnl: "+$13",  liq: "$11.10"  },
+    { sym: "BNB/USD",  side: "SHORT", size: "3.000", entry: "$335.00", mark: "$321.00", pnl: "+$42",  liq: "$402.00" },
+    { sym: "ARB/USD",  side: "LONG",  size: "200.0", entry: "$1.10",   mark: "$1.23",   pnl: "+$26",  liq: "$0.825"  },
+    { sym: "AVAX/USD", side: "SHORT", size: "8.000", entry: "$30.20",  mark: "$28.50",  pnl: "+$13",  liq: "$36.24"  },
+  ];
+
   return (
-    <div className="flex flex-col items-center justify-center text-center py-12 sm:py-20 px-5">
-      {/* Icon */}
-      <div
-        className="relative flex items-center justify-center mb-5 sm:mb-8 fade-up"
-        style={{ width: 56, height: 56 }}
-      >
+    <div className="flex flex-col items-center text-center">
+      {/* ── Ghost positions hero ── */}
+      <div className="relative w-full flex flex-col items-center justify-center overflow-hidden" style={{ minHeight: 520 }}>
+
+        {/* Ghost positions table — decorative background */}
         <div
-          className="absolute inset-0 rounded-full"
-          style={{ background: "var(--accent-dim)", filter: "blur(20px)" }}
-        />
-        <div
-          className="relative flex items-center justify-center rounded-sm"
+          className="absolute inset-0 pointer-events-none select-none overflow-hidden"
           style={{
-            width: 44,
-            height: 44,
-            background: "var(--bg-surface)",
-            border: "1px solid var(--accent)",
+            maskImage: "radial-gradient(ellipse 85% 75% at 50% 50%, transparent 28%, black 68%)",
+            WebkitMaskImage: "radial-gradient(ellipse 85% 75% at 50% 50%, transparent 28%, black 68%)",
           }}
         >
-          <CornerMarks size={8} inset={-1} thickness={1.5} />
-          <Search size={20} style={{ color: "var(--accent)" }} />
-        </div>
-      </div>
-
-      {/* Title */}
-      <div className="fade-up fade-up-1 mb-3">
-        <div className="flex items-center gap-2 mb-3 justify-center">
-          <span className="w-5 h-px" style={{ background: "var(--accent)" }} />
-          <span className="tag" style={{ color: "var(--accent)" }}>WALLET TRACKER</span>
-          <span className="w-5 h-px" style={{ background: "var(--accent)" }} />
-        </div>
-        <h1
-          className="text-[26px] sm:text-[48px] font-bold leading-none tracking-tight"
-          style={{ color: "var(--text)", letterSpacing: "-0.02em" }}
-        >
-          Track Any Address
-        </h1>
-      </div>
-
-      <p
-        className="text-[12px] sm:text-base mb-5 sm:mb-10 max-w-md fade-up fade-up-2"
-        style={{ color: "var(--text-muted)" }}
-      >
-        Enter a wallet address to see its full SoDEX trading portfolio —
-        PnL, volume, rank, markets, and trade history.
-      </p>
-
-      {/* Search bar */}
-      <div className="w-full max-w-[560px] fade-up fade-up-3 mt-2 sm:mt-0">
-        <div
-          className="relative flex items-center"
-          style={{
-            border: `1px solid ${searchFocused ? "var(--accent)" : "var(--border)"}`,
-            background: "var(--bg-surface)",
-            boxShadow: searchFocused ? "0 0 0 1px var(--accent), 0 0 32px var(--accent-dim)" : "none",
-            transition: "border-color 0.15s, box-shadow 0.15s",
-          }}
-        >
-          {searchFocused && <CornerMarks size={8} inset={-1} thickness={1.5} />}
-          <Search size={16} className="absolute left-4 pointer-events-none" style={{ color: "var(--text-faint)" }} />
-          <input
-            ref={searchRef}
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            onKeyDown={(e) => e.key === "Enter" && onSearch()}
-            placeholder="Paste a wallet address  e.g. 0x0879A87D…"
-            className="w-full bg-transparent outline-none mono text-sm py-4 pl-11 pr-28"
-            style={{ color: "var(--text)", caretColor: "var(--accent)" }}
-            spellCheck={false}
-            autoComplete="off"
-          />
-          {searchInput && (
-            <button
-              onClick={() => setSearchInput("")}
-              className="absolute right-[92px] opacity-50 hover:opacity-100 transition-opacity"
-              style={{ color: "var(--text-faint)" }}
-            >
-              <X size={14} />
-            </button>
-          )}
-          <button
-            onClick={onSearch}
-            disabled={searchPending || !searchInput.trim()}
-            className="absolute right-2 sheen-host px-4 py-2 tag font-bold transition-opacity disabled:opacity-40"
-            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
-          >
-            {searchPending ? "…" : "TRACK"}
-          </button>
-        </div>
-
-        {error && (
-          <div
-            className="mt-4 flex items-center gap-2 px-4 py-3"
-            style={{ border: "1px solid var(--red)", background: "rgba(204,46,46,0.06)" }}
-          >
-            <X size={14} style={{ color: "var(--red)" }} />
-            <span className="mono text-xs font-bold" style={{ color: "var(--red)" }}>{error}</span>
+          <div style={{ opacity: 0.12, minWidth: 700, margin: "0 auto", paddingTop: 28 }}>
+            <div className="grid items-center px-6 py-2.5"
+              style={{ gridTemplateColumns: TRACKER_GHOST_COLS, gap: 10, borderBottom: "1px solid var(--border)" }}>
+              {["MARKET","SIDE","SIZE","ENTRY","MARK","P&L","LIQ"].map(h => (
+                <span key={h} className="tag text-[9px]" style={{ color: "var(--text-faint)" }}>{h}</span>
+              ))}
+            </div>
+            {TRACKER_GHOST_ROWS.map((r, i) => (
+              <div key={i} className="grid items-center px-6"
+                style={{ gridTemplateColumns: TRACKER_GHOST_COLS, gap: 10, height: 44, borderBottom: "1px solid var(--border-subtle)" }}>
+                <span className="mono text-xs font-bold" style={{ color: "var(--text)" }}>{r.sym}</span>
+                <span className="mono text-xs font-bold" style={{ color: r.side === "LONG" ? "var(--green)" : "var(--red)" }}>{r.side}</span>
+                <span className="mono text-xs tabular-nums" style={{ color: "var(--text)" }}>{r.size}</span>
+                <span className="mono text-xs text-right tabular-nums" style={{ color: "var(--text-muted)" }}>{r.entry}</span>
+                <span className="mono text-xs text-right tabular-nums" style={{ color: "var(--text-muted)" }}>{r.mark}</span>
+                <span className="mono text-xs text-right font-bold tabular-nums" style={{ color: "var(--green)" }}>{r.pnl}</span>
+                <span className="mono text-xs text-right tabular-nums" style={{ color: "var(--text-faint)" }}>{r.liq}</span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
+        {/* Foreground */}
+        <div className="relative z-10 flex flex-col items-center w-full max-w-[560px] px-5 py-16">
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+            {[
+              { label: "TRADES",  color: "var(--green)"      },
+              { label: "P&L",     color: "var(--accent)"     },
+              { label: "VOLUME",  color: "var(--accent)"     },
+              { label: "RANK",    color: "var(--accent)"     },
+              { label: "BALANCE", color: "var(--text-faint)" },
+            ].map(f => (
+              <span key={f.label} className="tag text-[10px] px-2.5 py-1 font-bold"
+                style={{ border: `1px solid ${f.color}`, color: f.color, opacity: f.color === "var(--text-faint)" ? 0.5 : 1 }}>
+                {f.label}
+              </span>
+            ))}
+          </div>
+
+          <h1 className="text-[32px] sm:text-[48px] font-bold leading-none tracking-tight mb-4"
+            style={{ color: "var(--text)", letterSpacing: "-0.02em" }}>
+            Track Any Address
+          </h1>
+          <p className="text-sm mb-8 max-w-sm" style={{ color: "var(--text-muted)" }}>
+            Enter any wallet address to see its full SoDEX trading portfolio — open positions, P&L, volume, and rank.
+          </p>
+
+          <div className="w-full">
+            <div className="relative flex items-center" style={{
+              border: `1px solid ${searchFocused ? "var(--accent)" : "var(--border)"}`,
+              background: "var(--bg-surface)",
+              boxShadow: searchFocused ? "0 0 0 1px var(--accent), 0 0 40px var(--accent-dim)" : "none",
+              transition: "border-color 0.15s, box-shadow 0.15s",
+            }}>
+              {searchFocused && <CornerMarks size={8} inset={-1} thickness={1.5} />}
+              <Search size={16} className="absolute left-4 pointer-events-none" style={{ color: "var(--text-faint)" }} />
+              <input
+                ref={searchRef}
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                onKeyDown={(e) => e.key === "Enter" && onSearch()}
+                placeholder="Paste a wallet address  e.g. 0x0879A87D…"
+                className="w-full bg-transparent outline-none mono text-sm py-4 pl-11 pr-28"
+                style={{ color: "var(--text)", caretColor: "var(--accent)" }}
+                spellCheck={false}
+                autoComplete="off"
+              />
+              {searchInput && (
+                <button onClick={() => setSearchInput("")}
+                  className="absolute right-[92px] opacity-50 hover:opacity-100 transition-opacity"
+                  style={{ color: "var(--text-faint)" }}>
+                  <X size={14} />
+                </button>
+              )}
+              <button
+                onClick={onSearch}
+                disabled={searchPending || !searchInput.trim()}
+                className="absolute right-2 sheen-host px-4 py-2 tag font-bold transition-opacity disabled:opacity-40"
+                style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+              >
+                {searchPending ? "…" : "TRACK"}
+              </button>
+            </div>
+            {error && (
+              <div className="mt-4 flex items-center gap-2 px-4 py-3"
+                style={{ border: "1px solid var(--red)", background: "rgba(204,46,46,0.06)" }}>
+                <X size={14} style={{ color: "var(--red)" }} />
+                <span className="mono text-xs font-bold" style={{ color: "var(--red)" }}>{error}</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Watchlist workspace */}
       <div
-        className="w-full max-w-[820px] mt-6 sm:mt-14 fade-up fade-up-4 text-left"
+        className="w-full max-w-[820px] mt-4 fade-up fade-up-4 text-left"
         style={{
           border: "1px solid var(--border)",
           background: "var(--bg-surface)",

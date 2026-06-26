@@ -1,21 +1,17 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
-import { ComingSoon } from "@/components/ComingSoon";
+import { TradeHistoryPage } from "@/components/TradeHistoryPage";
 
 export const metadata: Metadata = {
   title: "Trade History — SoDEX Tracker",
-  description: "View complete perps position history for any SoDEX wallet — closed positions with entry, exit, PnL, leverage, and fees.",
+  description: "View complete perps and spot trade history for any SoDEX wallet — fills, fees, volume, and full CSV export.",
 };
 
 export default function TradeHistory() {
   return (
     <main>
       <Navbar />
-      <ComingSoon
-        label="TRADE HISTORY"
-        title="Trade History"
-        description="Full per-position trade export with entry, exit, PnL, leverage, and fees is coming soon."
-      />
+      <TradeHistoryPage />
     </main>
   );
 }

@@ -1,14 +1,12 @@
 "use client";
 
 /* ════════════════════════════════════════════════════════════════
-   ExportManager — singleton that survives page navigation
-   - 1000 items per page
-   - 3 second delay between requests
-   - 3 retries with 2s backoff on 429/503
-   - AbortController for cancellation
+   ExportManager — singleton that survives page navigation.
+   Fetches 1,000 trades per page with a 3-second inter-page delay
+   to respect SoDEX API rate limits.
    ════════════════════════════════════════════════════════════════ */
 
-export type ExportMode = "futures" | "spot";
+export type ExportMode = "perps" | "spot";
 export type ExportStatus = "idle" | "running" | "paused" | "done" | "error";
 
 export interface ExportState {
@@ -36,7 +34,7 @@ type Listener = (state: ExportState) => void;
 class ExportManager {
   private state: ExportState = {
     status: "idle",
-    mode: "futures",
+    mode: "perps",
     walletAddress: "",
     accountId: 0,
     fetchedCount: 0,
@@ -59,9 +57,7 @@ class ExportManager {
     return () => { this.listeners.delete(fn); };
   }
 
-  getState(): ExportState {
-    return this.state;
-  }
+  getState(): ExportState { return this.state; }
 
   private setState(partial: Partial<ExportState>) {
     this.state = { ...this.state, ...partial };
@@ -78,18 +74,10 @@ class ExportManager {
     this.cleanup();
     this.abortController = new AbortController();
     this.setState({
-      status: "running",
-      mode,
-      walletAddress,
-      accountId,
-      fetchedCount: 0,
-      nextCursor: null,
-      error: null,
-      startedAt: Date.now(),
-      finishedAt: null,
-      data: [],
-      perpsSymbolMap,
-      spotSymbolMap,
+      status: "running", mode, walletAddress, accountId,
+      fetchedCount: 0, nextCursor: null, error: null,
+      startedAt: Date.now(), finishedAt: null, data: [],
+      perpsSymbolMap, spotSymbolMap,
     });
     this.tick();
   }
@@ -110,13 +98,8 @@ class ExportManager {
   reset() {
     this.cleanup();
     this.setState({
-      status: "idle",
-      fetchedCount: 0,
-      nextCursor: null,
-      error: null,
-      startedAt: null,
-      finishedAt: null,
-      data: [],
+      status: "idle", fetchedCount: 0, nextCursor: null,
+      error: null, startedAt: null, finishedAt: null, data: [],
     });
   }
 
@@ -131,7 +114,7 @@ class ExportManager {
       const res = await fetch(url, { signal });
       if (res.status === 429 || res.status === 503) {
         if (attempt < MAX_RETRIES) {
-          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (attempt + 1)));
           continue;
         }
       }
@@ -150,8 +133,9 @@ class ExportManager {
       const params = new URLSearchParams({ account_id: String(accountId), limit: String(PAGE_SIZE) });
       if (nextCursor) params.set("cursor", nextCursor);
 
-      const url = mode === "futures"
-        ? `/api/perps/positions?${params.toString()}`
+      // Both modes use the same trade shape; perps → /api/perps/trades
+      const url = mode === "perps"
+        ? `/api/perps/trades?${params.toString()}`
         : `/api/spot/trades?${params.toString()}`;
 
       const res = await this.fetchWithRetry(url, controller.signal);
@@ -159,22 +143,17 @@ class ExportManager {
 
       const json = await res.json();
       if (controller.signal.aborted) return;
-
       if (json.code !== 0) throw new Error(json.message || "API error during export");
 
       const items: unknown[] = json.data || [];
       const newCursor: string | null = json.meta?.next_cursor ?? null;
 
-      // Client-side cursor fallback using btoa
+      // Client-side cursor fallback (both trade shapes share ts_ms, trade_id, symbol_id)
       let finalCursor = newCursor;
       if (!finalCursor && items.length >= PAGE_SIZE) {
         const last = items[items.length - 1] as Record<string, unknown> | undefined;
-        if (last) {
-          if (mode === "futures" && last.created_at && last.symbol_id && last.position_id) {
-            finalCursor = btoa(`${last.created_at},${last.symbol_id},${last.position_id}`);
-          } else if (mode === "spot" && last.ts_ms && last.trade_id && last.symbol_id) {
-            finalCursor = btoa(`${last.ts_ms},${last.trade_id},${last.symbol_id}`);
-          }
+        if (last?.ts_ms && last?.trade_id && last?.symbol_id) {
+          finalCursor = btoa(`${last.ts_ms},${last.trade_id},${last.symbol_id}`);
         }
       }
 
@@ -189,7 +168,6 @@ class ExportManager {
         return;
       }
 
-      // Schedule next fetch after rate limit delay
       this.timeoutId = setTimeout(() => this.tick(), RATE_LIMIT_MS);
     } catch (err) {
       if (controller.signal.aborted) return;
@@ -203,19 +181,12 @@ class ExportManager {
 
 export const exportManager = new ExportManager();
 
-/* Time estimate helper — 1000 items per page, 3s per request = ~20K items/min */
-export function estimateTime(itemCount: number): string {
-  const requests = Math.ceil(itemCount / PAGE_SIZE);
-  const seconds = requests * (RATE_LIMIT_MS / 1000);
-  if (seconds < 60) return `~${Math.ceil(seconds)} seconds`;
-  const minutes = seconds / 60;
-  if (minutes < 60) return `~${minutes.toFixed(1)} minutes`;
-  return `~${(minutes / 60).toFixed(1)} hours`;
-}
-
-/* CSV download helper */
 export function downloadCSV(headers: string[], rows: (string | number)[][], filename: string) {
-  const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+  const escape = (v: string | number) => {
+    const s = String(v);
+    return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = [headers.map(escape).join(","), ...rows.map((r) => r.map(escape).join(","))].join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
