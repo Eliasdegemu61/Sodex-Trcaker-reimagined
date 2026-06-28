@@ -1196,10 +1196,14 @@ export function ReverseSearchPage() {
 
                     {/* Value input */}
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       placeholder="e.g. 10000"
                       value={f.value}
-                      onChange={(e) => updateFilter(f.id, { value: e.target.value })}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^0-9.\-]/g, "");
+                        updateFilter(f.id, { value: v });
+                      }}
                       onKeyDown={(e) =>
                         e.key === "Enter" && handleAdvancedSearch()
                       }

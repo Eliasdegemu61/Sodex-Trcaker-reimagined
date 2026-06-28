@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Hide number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* ── Mobile layout ── */
 @media (max-width: 767px) {
   main { padding-bottom: 5rem; }
