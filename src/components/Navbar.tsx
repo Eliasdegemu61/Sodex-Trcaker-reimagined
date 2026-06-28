@@ -59,10 +59,9 @@ const NAV_ITEMS: NavItem[] = [
       },
       {
         label: "Reverse Search",
-        href: "#",
-        description: "Find wallets by trade pattern",
+        href: "/reverse-search",
+        description: "Find wallets by address characters",
         icon: <SearchX size={14} />,
-        comingSoon: true,
       },
       {
         label: "Copy Trading",
@@ -236,7 +235,7 @@ const SHEET_PAGES: SheetPage[] = [
   { label: "Journal", href: "#", icon: BookOpen, comingSoon: true },
   { label: "Demo Trading", href: "/trade/BTC-USD", icon: PlayCircle },
   { label: "Accrued Funding", href: "/accrued-funding", icon: Coins },
-  { label: "Reverse Search", href: "#", icon: SearchX, comingSoon: true },
+  { label: "Reverse Search", href: "/reverse-search", icon: SearchX },
   { label: "Copy Trading", href: "#", icon: Copy, comingSoon: true },
   { label: "Trading Bots", href: "#", icon: Bot, comingSoon: true },
 ];
