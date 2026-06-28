@@ -46,6 +46,7 @@ interface ResultItem {
   pnl?: number;
   volume?: number;
   rank?: number;
+  windowData?: Partial<Record<WindowType, { pnl: number; volume: number; rank?: number }>>;
 }
 
 /* ──────────────────────────────────────────────────────────────
@@ -254,7 +255,7 @@ function ResultsTable({
                   </td>
                   <td className="px-6 py-3">
                     <span
-                      className="text-xs font-mono block truncate max-w-[280px]"
+                      className="text-xs font-mono block whitespace-nowrap"
                       style={{ color: "var(--text-muted)" }}
                     >
                       {trader.address || "N/A"}
@@ -502,17 +503,18 @@ export function ReverseSearchPage() {
   // Multiple independent filters
   interface FilterEntry {
     id: number;
+    windowType: WindowType;
     metric: SortBy;
     op: Operator;
     value: string;
   }
   const [filters, setFilters] = useState<FilterEntry[]>([
-    { id: 1, metric: "volume", op: ">", value: "" },
+    { id: 1, windowType: "ALL_TIME", metric: "volume", op: ">", value: "" },
   ]);
   const [nextFilterId, setNextFilterId] = useState(2);
 
   const addFilter = () => {
-    setFilters([...filters, { id: nextFilterId, metric: "pnl", op: ">", value: "" }]);
+    setFilters([...filters, { id: nextFilterId, windowType: "ALL_TIME", metric: "pnl", op: ">", value: "" }]);
     setNextFilterId(nextFilterId + 1);
   };
   const removeFilter = (id: number) => {
@@ -622,8 +624,8 @@ export function ReverseSearchPage() {
   /* ── Advanced search: any field optional + multiple filters ── */
   const matchesAllFilters = (item: ResultItem): boolean => {
     return filters.every((f) => {
-      const val = f.metric === "pnl" ? item.pnl : item.volume;
-      if (val === undefined || val === null) return false;
+      const wd = item.windowData?.[f.windowType];
+      const val = wd ? (f.metric === "pnl" ? wd.pnl : wd.volume) : 0;
       const threshold = parseFloat(f.value);
       if (isNaN(threshold)) return true; // empty filter = no filter
       switch (f.op) {
@@ -664,27 +666,43 @@ export function ReverseSearchPage() {
         return;
       }
 
-      // Fetch leaderboard data with selected window + sort
-      const withData = await Promise.all(
+      // Collect all unique window types needed (main display + all filter windows)
+      const allWindows = new Set<WindowType>([windowType]);
+      filters.forEach((f) => allWindows.add(f.windowType));
+
+      // Fetch leaderboard data for all needed window types
+      const withData: ResultItem[] = await Promise.all(
         matched.map(async (item) => {
-          try {
-            const r = await fetch(
-              `https://mainnet-data.sodex.dev/api/v1/leaderboard/rank?window_type=${windowType}&sort_by=${sortBy}&wallet_address=${item.address}`
-            );
-            if (r.ok) {
-              const j = await r.json();
-              const ri = j.data?.item;
-              if (ri) {
-                return {
-                  ...item,
-                  pnl: parseFloat(ri.pnl_usd || "0"),
-                  volume: parseFloat(ri.volume_usd || "0"),
-                  rank: ri.rank,
-                };
+          const windowData: ResultItem["windowData"] = {};
+          for (const w of allWindows) {
+            try {
+              const r = await fetch(
+                `https://mainnet-data.sodex.dev/api/v1/leaderboard/rank?window_type=${w}&sort_by=${sortBy}&wallet_address=${item.address}`
+              );
+              if (r.ok) {
+                const j = await r.json();
+                const ri = j.data?.item;
+                if (ri) {
+                  windowData[w] = {
+                    pnl: parseFloat(ri.pnl_usd || "0"),
+                    volume: parseFloat(ri.volume_usd || "0"),
+                    rank: ri.rank,
+                  };
+                }
               }
+            } catch {}
+            if (!windowData[w]) {
+              windowData[w] = { pnl: 0, volume: 0 };
             }
-          } catch {}
-          return { ...item, pnl: 0, volume: 0 };
+          }
+          const main = windowData[windowType]!;
+          return {
+            ...item,
+            pnl: main.pnl,
+            volume: main.volume,
+            rank: main.rank,
+            windowData,
+          };
         })
       );
 
@@ -719,7 +737,7 @@ export function ReverseSearchPage() {
     setAdvQuery("");
     setAdvPrefix("");
     setAdvSuffix("");
-    setFilters([{ id: 1, metric: "volume", op: ">", value: "" }]);
+    setFilters([{ id: 1, windowType: "ALL_TIME", metric: "volume", op: ">", value: "" }]);
     setNextFilterId(2);
     setFullResults([]);
     setPageResults([]);
@@ -1112,6 +1130,27 @@ export function ReverseSearchPage() {
                     key={f.id}
                     className="flex flex-wrap items-center gap-2"
                   >
+                    {/* Window selector */}
+                    <div
+                      className="flex items-center"
+                      style={{ border: "1px solid var(--border)", padding: 2, gap: 2 }}
+                    >
+                      {WINDOWS.map((w) => (
+                        <button
+                          key={w.value}
+                          onClick={() => updateFilter(f.id, { windowType: w.value })}
+                          className="tag px-2 py-1 text-[8px] transition-colors"
+                          style={{
+                            background: f.windowType === w.value ? "var(--accent)" : "transparent",
+                            color: f.windowType === w.value ? "var(--accent-fg)" : "var(--text-muted)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {w.short}
+                        </button>
+                      ))}
+                    </div>
+
                     {/* Metric toggle */}
                     <div
                       className="flex items-center"
@@ -1214,7 +1253,7 @@ export function ReverseSearchPage() {
                         setAdvQuery("");
                         setAdvPrefix("");
                         setAdvSuffix("");
-                        setFilters([{ id: 1, metric: "volume", op: ">", value: "" }]);
+                        setFilters([{ id: 1, windowType: "ALL_TIME", metric: "volume", op: ">", value: "" }]);
                         setNextFilterId(2);
                       }}
                       className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] transition-colors"
